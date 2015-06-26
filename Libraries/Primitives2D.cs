@@ -35,6 +35,7 @@ namespace MapGenerator.Libraries
 	{
 		private static readonly Dictionary<String, List<Vector2>> _circleCache = new Dictionary<string, List<Vector2>>();
 		private readonly Texture2D _pixel;
+	    private readonly SpriteBatch _spriteBatch;
 
         public Primitives2D(SpriteBatch spriteBatch)
 		{
@@ -45,6 +46,7 @@ namespace MapGenerator.Libraries
 
             _pixel = new Texture2D(spriteBatch.GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             _pixel.SetData(new[] { Color.White });
+            _spriteBatch = spriteBatch;
 		}
 
 		/// <summary>Creates a list of vectors that represents a circle.</summary>
@@ -116,12 +118,11 @@ namespace MapGenerator.Libraries
 		}
 
         /// <summary>Draws a list of connecting points.</summary>
-        /// <param name="spriteBatch">The destination drawing surface.</param>
-        /// /// <param name="position">Where to position the points.</param>
+        /// <param name="position">Where to position the points.</param>
         /// <param name="points">The points to connect with lines.</param>
         /// <param name="color">The color to use.</param>
         /// <param name="thickness">The thickness of the lines.</param>
-        private void DrawPoints(SpriteBatch spriteBatch, Vector2 position, List<Vector2> points, Color color, float thickness)
+        private void DrawPoints(Vector2 position, List<Vector2> points, Color color, float thickness)
         {
             if (points.Count < 2)
             {
@@ -130,24 +131,18 @@ namespace MapGenerator.Libraries
 
             for (int i = 1; i < points.Count; i++)
             {
-                DrawLine(spriteBatch, points[i - 1] + position, points[i] + position, color, thickness);
+                DrawLine(points[i - 1] + position, points[i] + position, color, thickness);
             }
         }
 
 	    /// <summary>Draws a line from point1 to point2 with an offset.</summary>
-		/// <param name="spriteBatch">The destination drawing surface.</param>
 		/// <param name="point1">The first point.</param>
 		/// <param name="point2">The second point.</param>
 		/// <param name="color">The color to use.</param>
         /// <param name="thickness">The thickness of the line.</param>
         [PublicAPI]
-		public void DrawLine(SpriteBatch spriteBatch, Vector2 point1, Vector2 point2, Color color, float thickness)
+		public void DrawLine(Vector2 point1, Vector2 point2, Color color, float thickness)
         {
-            if (spriteBatch == null)
-            {
-                throw (new ArgumentNullException("spriteBatch"));
-            }
-
 			// Calculate the distance between the two vectors.
 			float distance = Vector2.Distance(point1, point2);
 
@@ -155,25 +150,23 @@ namespace MapGenerator.Libraries
 			float angle = (float)Math.Atan2(point2.Y - point1.Y, point2.X - point1.X);
 
             // Stretch the pixel between the two vectors.
-	        spriteBatch.Draw(_pixel, point1, null, color, angle, Vector2.Zero, new Vector2(distance, thickness),
+	        _spriteBatch.Draw(_pixel, point1, null, color, angle, Vector2.Zero, new Vector2(distance, thickness),
 	            SpriteEffects.None, 0);
         }
 
 		/// <summary>Draw a circle.</summary>
-		/// <param name="spriteBatch">The destination drawing surface.</param>
 		/// <param name="center">The center of the circle.</param>
 		/// <param name="radius">The radius of the circle.</param>
 		/// <param name="sides">The number of sides to generate.</param>
 		/// <param name="color">The color of the circle.</param>
 		/// <param name="thickness">The thickness of the lines used.</param>
         [PublicAPI]
-		public void DrawCircle(SpriteBatch spriteBatch, Vector2 center, float radius, int sides, Color color, float thickness)
+		public void DrawCircle(Vector2 center, float radius, int sides, Color color, float thickness)
 		{
-			DrawPoints(spriteBatch, center, CreateCircle(radius, sides), color, thickness);
+			DrawPoints(center, CreateCircle(radius, sides), color, thickness);
 		}
 
 	    /// <summary>Draw an arc.</summary>
-		/// <param name="spriteBatch">The destination drawing surface.</param>
 		/// <param name="center">The center of the arc.</param>
 		/// <param name="radius">The radius of the arc.</param>
 		/// <param name="sides">The number of sides to generate.</param>
@@ -182,10 +175,10 @@ namespace MapGenerator.Libraries
 		/// <param name="color">The color of the arc.</param>
         /// <param name="thickness">The thickness of the arc.</param>
         [PublicAPI]
-		public void DrawArc(SpriteBatch spriteBatch, Vector2 center, float radius, int sides, float startingAngle, float radians, Color color, float thickness)
+		public void DrawArc(Vector2 center, float radius, int sides, float startingAngle, float radians, Color color, float thickness)
 		{
 			List<Vector2> arc = CreateArc(radius, sides, startingAngle, radians);
-			DrawPoints(spriteBatch, center, arc, color, thickness);
+			DrawPoints(center, arc, color, thickness);
 		}
 
 	    public void Dispose()
